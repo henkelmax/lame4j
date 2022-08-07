@@ -2,6 +2,19 @@
 
 A Java wrapper for [LAME](https://lame.sourceforge.io/index.php).
 
+This library includes natives for:
+
+- `Windows x86`
+- `Windows x64`
+- `MacOS x86`
+- `MacOS x64`
+- `MacOS aarch64`
+- `Linux x86`
+- `Linux x64`
+- `Linux aarch64`
+- `Linux armel`
+- `Linux armhf`
+
 ## Usage
 
 **Maven**
