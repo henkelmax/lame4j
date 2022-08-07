@@ -23,17 +23,7 @@ public class LameDecoder {
 
     public short[] decode() throws IOException {
         ShortArrayBuffer sampleBuffer = new ShortArrayBuffer(2048);
-        decode(new ShortConsumer() {
-            @Override
-            public void accept(short[] samples, int offset, int length) {
-                sampleBuffer.write(samples, offset, length);
-            }
-
-            @Override
-            public void accept(short sample) {
-                sampleBuffer.write(sample);
-            }
-        });
+        decode(sampleBuffer::write);
         return sampleBuffer.toShortArray();
     }
 
@@ -42,6 +32,7 @@ public class LameDecoder {
 
         short[] bufferLeft = new short[8192];
         short[] bufferRight = new short[8192];
+        short[] bufferInterleaved = null;
 
         while (true) {
             int read = inputStream.read(buffer);
@@ -64,10 +55,14 @@ public class LameDecoder {
                 if (mp3Data.stereo == 1) {
                     shortConsumer.accept(bufferLeft, 0, samplesRead);
                 } else {
-                    for (int i = 0; i < samplesRead; i++) {
-                        shortConsumer.accept(bufferLeft[i]);
-                        shortConsumer.accept(bufferRight[i]);
+                    if (bufferInterleaved == null) {
+                        bufferInterleaved = new short[bufferLeft.length + bufferRight.length];
                     }
+                    for (int i = 0; i < samplesRead; i++) {
+                        bufferInterleaved[i * 2] = bufferLeft[i];
+                        bufferInterleaved[i * 2 + 1] = bufferRight[i];
+                    }
+                    shortConsumer.accept(bufferInterleaved, 0, samplesRead * 2);
                 }
             }
         }
@@ -79,8 +74,6 @@ public class LameDecoder {
 
     public interface ShortConsumer {
         void accept(short[] samples, int offset, int length);
-
-        void accept(short sample);
     }
 
     public int getSampleRate() {
@@ -99,8 +92,16 @@ public class LameDecoder {
         return mp3Data.framesize;
     }
 
+    public int getSampleSizeInBits() {
+        return getSampleSizeInBytes() * 8;
+    }
+
+    public int getSampleSizeInBytes() {
+        return 2;
+    }
+
     public AudioFormat format() {
-        return new AudioFormat(getSampleRate(), 16, getChannelCount(), true, false);
+        return new AudioFormat(getSampleRate(), getSampleSizeInBits(), getChannelCount(), true, false);
     }
 
 }
