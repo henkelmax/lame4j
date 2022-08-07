@@ -8,6 +8,13 @@ import java.io.InputStream;
 
 public class LameDecoder {
 
+    private static final byte[][] MAGIC_BYTES = new byte[][]{
+            {(byte) 0xFF, (byte) 0xFB},
+            {(byte) 0xFF, (byte) 0xF3},
+            {(byte) 0xFF, (byte) 0xF2},
+            {(byte) 0x49, (byte) 0x44, (byte) 0x33}
+    };
+
     private final InputStream inputStream;
     private final Lame.Mp3Data mp3Data;
 
@@ -23,18 +30,27 @@ public class LameDecoder {
     }
 
     public void decode(ShortConsumer shortConsumer) throws IOException {
+        byte[] buffer = new byte[1024];
+
+        int read = inputStream.read(buffer);
+        if (read <= 0) {
+            return;
+        }
+
+        if (!hasMagicBytes(buffer)) {
+            throw new IOException("Invalid file format");
+        }
+
         Pointer gfp = Lame.INSTANCE.lame_init();
         Lame.INSTANCE.lame_set_decode_only(gfp, 1);
         Pointer hip = Lame.INSTANCE.hip_decode_init();
-
-        byte[] buffer = new byte[1024];
 
         short[] bufferLeft = new short[8192];
         short[] bufferRight = new short[8192];
         short[] bufferInterleaved = null;
 
         while (true) {
-            int read = inputStream.read(buffer);
+            read = inputStream.read(buffer);
             if (read <= 0) {
                 break;
             }
@@ -69,6 +85,25 @@ public class LameDecoder {
         Lame.INSTANCE.hip_decode_exit(hip);
         Lame.INSTANCE.lame_close(gfp);
         inputStream.close();
+    }
+
+    private boolean hasMagicBytes(byte[] data) {
+        for (byte[] magicBytes : MAGIC_BYTES) {
+            if (data.length < magicBytes.length) {
+                return false;
+            }
+            boolean valid = true;
+            for (int i = 0; i < magicBytes.length; i++) {
+                if (data[i] != magicBytes[i]) {
+                    valid = false;
+                    break;
+                }
+            }
+            if (valid) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public interface ShortConsumer {
