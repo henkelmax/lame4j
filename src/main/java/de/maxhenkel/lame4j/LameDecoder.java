@@ -8,17 +8,12 @@ import java.io.InputStream;
 
 public class LameDecoder {
 
-    private final Pointer gfp;
-    private final Pointer hip;
     private final InputStream inputStream;
     private final Lame.Mp3Data mp3Data;
 
     public LameDecoder(InputStream inputStream) {
         this.inputStream = inputStream;
-        gfp = Lame.INSTANCE.lame_init();
-        Lame.INSTANCE.lame_set_decode_only(gfp, 1);
-        hip = Lame.INSTANCE.hip_decode_init();
-        mp3Data = new Lame.Mp3Data();
+        this.mp3Data = new Lame.Mp3Data();
     }
 
     public short[] decode() throws IOException {
@@ -28,6 +23,10 @@ public class LameDecoder {
     }
 
     public void decode(ShortConsumer shortConsumer) throws IOException {
+        Pointer gfp = Lame.INSTANCE.lame_init();
+        Lame.INSTANCE.lame_set_decode_only(gfp, 1);
+        Pointer hip = Lame.INSTANCE.hip_decode_init();
+
         byte[] buffer = new byte[1024];
 
         short[] bufferLeft = new short[8192];
