@@ -30,7 +30,7 @@ public class LameEncoder implements AutoCloseable {
 
     public void write(short[] samples) throws IOException {
         assert samples.length % channels == 0;
-        byte[] buffer = new byte[Lame.INSTANCE.estimateMp3BufferSize(samples.length) * channels];
+        byte[] buffer = new byte[estimateMp3BufferSize(samples.length) * channels];
         int numBytes;
         if (channels == 1) {
             numBytes = Lame.INSTANCE.lame_encode_buffer(gfp, samples, null, samples.length, buffer, buffer.length);
@@ -54,4 +54,13 @@ public class LameEncoder implements AutoCloseable {
         Lame.INSTANCE.lame_close(gfp);
         outputStream.close();
     }
+
+    /**
+     * @param numSamples the number of PCM samples in each channel - It is not the sum of the number of samples in the L and R channels
+     * @return the worst case size of the mp3Buffer
+     */
+    private int estimateMp3BufferSize(int numSamples) {
+        return (int) Math.ceil(1.25D * (double) numSamples + 7200D);
+    }
+
 }
