@@ -8,6 +8,9 @@ import java.io.InputStream;
 
 public class LameDecoder {
 
+    /**
+     * All valid magic bytes for a MP3 file.
+     */
     private static final byte[][] MAGIC_BYTES = new byte[][]{
             {(byte) 0xFF, (byte) 0xFB},
             {(byte) 0xFF, (byte) 0xF3},
@@ -18,17 +21,32 @@ public class LameDecoder {
     private final InputStream inputStream;
     private final Lame.Mp3Data mp3Data;
 
+    /**
+     * @param inputStream the input stream to read the MP3 data from
+     */
     public LameDecoder(InputStream inputStream) {
         this.inputStream = inputStream;
         this.mp3Data = new Lame.Mp3Data();
     }
 
+    /**
+     * Decodes the MP3 file and returns the decoded audio data as PCM samples.
+     *
+     * @return the decoded audio data as PCM samples
+     * @throws IOException if an I/O error occurs
+     */
     public short[] decode() throws IOException {
         ShortArrayBuffer sampleBuffer = new ShortArrayBuffer(2048);
         decode(sampleBuffer::write);
         return sampleBuffer.toShortArray();
     }
 
+    /**
+     * Decodes the MP3 file and writes the decoded audio data to the given consumer.
+     *
+     * @param shortConsumer the consumer to write the decoded audio data to
+     * @throws IOException if an I/O error occurs
+     */
     public void decode(ShortConsumer shortConsumer) throws IOException {
         byte[] buffer = new byte[1024];
 
@@ -110,30 +128,53 @@ public class LameDecoder {
         void accept(short[] samples, int offset, int length);
     }
 
+    /**
+     * @return the sample rate of the decoded audio
+     */
     public int getSampleRate() {
         return mp3Data.samplerate;
     }
 
+    /**
+     * @return the number of channels of the decoded audio
+     */
     public int getChannelCount() {
         return mp3Data.stereo;
     }
 
+    /**
+     * @return the bitrate of the mp3 file
+     */
     public int getBitrate() {
         return mp3Data.bitrate;
     }
 
+    /**
+     * @return the frame size of the mp3 file
+     */
     public int getFrameSize() {
         return mp3Data.framesize;
     }
 
+    /**
+     * @return the sample size of the decoded audio in bits
+     */
     public int getSampleSizeInBits() {
         return getSampleSizeInBytes() * 8;
     }
 
+    /**
+     * @return the sample size of the decoded audio in bytes
+     */
     public int getSampleSizeInBytes() {
         return 2;
     }
 
+    /**
+     * Creates an AudioFormat object for the decoded audio.
+     *
+     * @return the audio format of the decoded audio
+     */
     public AudioFormat format() {
         return new AudioFormat(getSampleRate(), getSampleSizeInBits(), getChannelCount(), true, false);
     }
