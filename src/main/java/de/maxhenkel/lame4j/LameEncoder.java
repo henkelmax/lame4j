@@ -11,6 +11,14 @@ public class LameEncoder implements AutoCloseable {
     private final int channels;
     private final OutputStream outputStream;
 
+    /**
+     * @param channels     the number of channels of the audio data - Valid values are 1 and 2
+     * @param sampleRate   the sample rate of the audio data
+     * @param bitRate      the target bit rate of the encoded audio data
+     * @param quality      the quality of the encoded audio data - Valid values are 0 (highest) to 9 (lowest)
+     * @param outputStream the output stream to write the encoded audio data to
+     * @throws IOException if an I/O error occurs
+     */
     public LameEncoder(int channels, int sampleRate, int bitRate, int quality, OutputStream outputStream) throws IOException {
         assert channels == 1 || channels == 2;
         assert quality >= 0 && quality <= 9;
@@ -28,6 +36,12 @@ public class LameEncoder implements AutoCloseable {
         }
     }
 
+    /**
+     * Writes the given samples to the output stream.
+     *
+     * @param samples the samples to write
+     * @throws IOException if an I/O error occurs
+     */
     public void write(short[] samples) throws IOException {
         assert samples.length % channels == 0;
         byte[] buffer = new byte[estimateMp3BufferSize(samples.length) * channels];
@@ -43,6 +57,11 @@ public class LameEncoder implements AutoCloseable {
         outputStream.write(buffer, 0, numBytes);
     }
 
+    /**
+     * Finalizes the mp3 file and closes the output stream.
+     *
+     * @throws IOException if an I/O error occurs
+     */
     @Override
     public void close() throws IOException {
         byte[] flushBuffer = new byte[7200];
