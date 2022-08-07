@@ -6,7 +6,7 @@
 
     <groupId>de.maxhenkel.lame4j</groupId>
     <artifactId>lame4j</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.0-jna-4.4.0</version>
 
     <name>Lame Wrapper for Java</name>
     <url>https://maxhenkel.de</url>
