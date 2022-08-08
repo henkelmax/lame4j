@@ -183,7 +183,7 @@ public class LameDecoder {
         if (!headerParsed()) {
             return null;
         }
-        return new AudioFormat(getSampleRate(), getSampleSizeInBits(), getChannelCount(), true, false);
+        return new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, getSampleRate(), getSampleSizeInBits(), getChannelCount(), getSampleSizeInBytes() * getChannelCount(), getSampleRate(), false);
     }
 
 }
