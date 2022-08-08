@@ -128,6 +128,10 @@ public class LameDecoder {
         void accept(short[] samples, int offset, int length);
     }
 
+    public boolean headerParsed() {
+        return mp3Data.header_parsed == 1;
+    }
+
     /**
      * @return the sample rate of the decoded audio
      */
@@ -173,9 +177,12 @@ public class LameDecoder {
     /**
      * Creates an AudioFormat object for the decoded audio.
      *
-     * @return the audio format of the decoded audio
+     * @return the audio format of the decoded audio or null if the header of the mp3 file is not yet parsed
      */
     public AudioFormat format() {
+        if (!headerParsed()) {
+            return null;
+        }
         return new AudioFormat(getSampleRate(), getSampleSizeInBits(), getChannelCount(), true, false);
     }
 
