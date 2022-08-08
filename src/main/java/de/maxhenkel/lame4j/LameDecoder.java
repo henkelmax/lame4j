@@ -67,12 +67,7 @@ public class LameDecoder {
         short[] bufferRight = new short[8192];
         short[] bufferInterleaved = null;
 
-        while (true) {
-            read = inputStream.read(buffer);
-            if (read <= 0) {
-                break;
-            }
-
+        do {
             while (true) {
                 int samplesRead = Lame.INSTANCE.hip_decode1_headers(hip, buffer, read, bufferLeft, bufferRight, mp3Data);
                 read = 0;
@@ -98,7 +93,7 @@ public class LameDecoder {
                     shortConsumer.accept(bufferInterleaved, 0, samplesRead * 2);
                 }
             }
-        }
+        } while ((read = inputStream.read(buffer)) >= 0);
 
         Lame.INSTANCE.hip_decode_exit(hip);
         Lame.INSTANCE.lame_close(gfp);
