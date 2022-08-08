@@ -2,6 +2,9 @@ package de.maxhenkel.lame4j;
 
 import com.sun.jna.*;
 
+import java.util.Arrays;
+import java.util.List;
+
 public interface Lame extends Library {
 
     Lame INSTANCE = Native.load(NativeLibrary.getInstance(LibraryLoader.getPath()).getFile().getAbsolutePath(), Lame.class);
@@ -23,14 +26,6 @@ public interface Lame extends Library {
     int lame_encode_buffer(Pointer gfp, short[] leftPcm, short[] rightPcm, int numSamples, byte[] mp3buffer, int mp3bufferSize);
 
     int lame_encode_buffer_interleaved(Pointer gfp, short[] pcm, int numSamples, byte[] mp3buffer, int mp3bufferSize);
-
-    /**
-     * @param numSamples the number of PCM samples in each channel - It is not the sum of the number of samples in the L and R channels
-     * @return the worst case size of the mp3Buffer
-     */
-    default int estimateMp3BufferSize(int numSamples) {
-        return (int) Math.ceil(1.25D * (double) numSamples + 7200D);
-    }
 
     int lame_encode_flush(Pointer gfp, byte[] mp3buffer, int mp3bufferSize);
 
@@ -61,7 +56,6 @@ public interface Lame extends Library {
         public static final int MAX_INDICATOR = 5;
     }
 
-    @Structure.FieldOrder({"header_parsed", "stereo", "samplerate", "bitrate", "mode", "mode_ext", "framesize", "nsamp", "totalframes", "framenum"})
     public class Mp3Data extends Structure {
         public int header_parsed;
         public int stereo;
@@ -73,6 +67,12 @@ public interface Lame extends Library {
         public long nsamp;
         public int totalframes;
         public int framenum;
+
+        @Override
+        protected List<String> getFieldOrder() {
+            return Arrays.asList("header_parsed", "stereo", "samplerate", "bitrate", "mode", "mode_ext", "framesize", "nsamp", "totalframes", "framenum");
+        }
+
     }
 
 }
