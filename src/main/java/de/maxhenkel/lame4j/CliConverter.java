@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 public class CliConverter {
 
     public static void main(String[] args) throws IOException {
+        System.out.println("LAME version " + Lame.INSTANCE.get_lame_version());
         if (args.length < 2) {
             System.out.println("Usage: java -jar lame4j.jar <input file> <output file>");
             return;
