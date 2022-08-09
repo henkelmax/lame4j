@@ -9,6 +9,8 @@ public interface Lame extends Library {
 
     Lame INSTANCE = Native.loadLibrary(NativeLibrary.getInstance(LibraryLoader.getPath()).getFile().getAbsolutePath(), Lame.class);
 
+    String get_lame_version();
+
     Pointer lame_init();
 
     int lame_set_num_channels(Pointer gfp, int channels);
