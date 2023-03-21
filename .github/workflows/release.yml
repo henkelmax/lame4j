@@ -113,7 +113,7 @@ jobs:
         run: |
           cargo install cargo-xbuild
           rustup target add aarch64-apple-darwin
-          SDKROOT=$(pwd)/sdk/MacOSX11.0.sdk/ MACOSX_DEPLOYMENT_TARGET=11.0 cargo build --target=aarch64-apple-darwin --release --lib
+          MP3LAME_SYS_OVERRIDE_HOST=aarch64-apple-darwin SDKROOT=$(pwd)/sdk/MacOSX11.0.sdk/ MACOSX_DEPLOYMENT_TARGET=11.0 cargo build --target=aarch64-apple-darwin --release --lib
       - uses: actions/upload-artifact@v3
         with:
           name: lame4j-macos-aarch64
