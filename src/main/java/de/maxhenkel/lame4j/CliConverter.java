@@ -6,25 +6,24 @@ import java.nio.file.Paths;
 
 public class CliConverter {
 
-    public static void main(String[] args) throws IOException {
-        System.out.println("LAME version " + Lame.INSTANCE.get_lame_version());
+    public static void main(String[] args) throws IOException, UnknownPlatformException {
         if (args.length < 2) {
             System.out.println("Usage: java -jar lame4j.jar <input file> <output file>");
             return;
         }
-        LameDecoder decoder = new LameDecoder(Files.newInputStream(Paths.get(args[0])));
+        DecodedAudio decodedAudio = Mp3Decoder.decode(Files.newInputStream(Paths.get(args[0])));
 
-        short[] decode = decoder.decode();
+        short[] decode = decodedAudio.getSamples();
 
-        System.out.println("Sample Rate: " + decoder.getSampleRate());
-        System.out.println("Bitrate: " + decoder.getBitrate());
-        System.out.println("Channels: " + decoder.getChannelCount());
-        System.out.println("FrameSize: " + decoder.getFrameSize());
+        System.out.println("Sample Rate: " + decodedAudio.getSampleRate());
+        System.out.println("Bit Rate: " + decodedAudio.getBitRate());
+        System.out.println("Channels: " + decodedAudio.getChannelCount());
+        System.out.println("Frame Size: " + decodedAudio.getSampleSizeInBits());
 
         System.out.println("Length: " + decode.length + " samples");
-        System.out.println("Duration: " + ((float) decode.length / (float) decoder.getSampleRate()) + " seconds");
+        System.out.println("Duration: " + ((float) decode.length / (float) decodedAudio.getSampleRate()) + " seconds");
 
-        LameEncoder encoder = new LameEncoder(decoder.getChannelCount(), decoder.getSampleRate(), decoder.getBitrate(), 5, Files.newOutputStream(Paths.get(args[1])));
+        Mp3Encoder encoder = new Mp3Encoder(decodedAudio.getChannelCount(), decodedAudio.getSampleRate(), decodedAudio.getBitRate(), 5, Files.newOutputStream(Paths.get(args[1])));
         encoder.write(decode);
         encoder.close();
     }

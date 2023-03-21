@@ -1,19 +1,17 @@
 # Lame4J
 
-A Java wrapper for [LAME](https://lame.sourceforge.io/index.php).
+A Java wrapper for [LAME](https://lame.sourceforge.io/index.php) written in Rust using JNI.
+This also includes [minimp3](https://github.com/lieff/minimp3) to decode mp3 files.
 
 This library includes natives for:
 
 - `Windows x86`
 - `Windows x64`
-- `MacOS x86`
 - `MacOS x64`
 - `MacOS aarch64`
 - `Linux x86`
 - `Linux x64`
 - `Linux aarch64`
-- `Linux armel`
-- `Linux armhf`
 
 ## Usage
 
@@ -23,7 +21,7 @@ This library includes natives for:
 <dependency>
   <groupId>de.maxhenkel.lame4j</groupId>
   <artifactId>lame4j</artifactId>
-  <version>1.0.0</version>
+  <version>2.0.0</version>
 </dependency>
 
 <repositories>
@@ -38,7 +36,7 @@ This library includes natives for:
 
 ``` groovy
 dependencies {
-  implementation 'de.maxhenkel.lame4j:lame4j:1.0.0'
+  implementation 'de.maxhenkel.lame4j:lame4j:2.0.0'
 }
 
 repositories {
@@ -52,17 +50,19 @@ repositories {
 ## Example
 
 ``` java
-LameDecoder decoder = new LameDecoder(Files.newInputStream(Paths.get("myfile.mp3")));
-short[] decode = decoder.decode();
+DecodedAudio decodedAudio = Mp3Decoder.decode(Files.newInputStream(Paths.get("myfile.mp3")));
 
-System.out.println("Sample Rate: " + decoder.getSampleRate());
-System.out.println("Bitrate: " + decoder.getBitrate());
-System.out.println("Channels: " + decoder.getChannelCount());
-System.out.println("FrameSize: " + decoder.getFrameSize());
+short[] decode = decodedAudio.getSamples();
+
+System.out.println("Sample Rate: " + decodedAudio.getSampleRate());
+System.out.println("Bit Rate: " + decodedAudio.getBitRate());
+System.out.println("Channels: " + decodedAudio.getChannelCount());
+System.out.println("Frame Size: " + decodedAudio.getSampleSizeInBits());
+
 System.out.println("Length: " + decode.length + " samples");
-System.out.println("Duration: " + ((float) decode.length / (float) decoder.getSampleRate()) + " seconds");
+System.out.println("Duration: " + ((float) decode.length / (float) decodedAudio.getSampleRate()) + " seconds");
 
-LameEncoder encoder = new LameEncoder(decoder.getChannelCount(), decoder.getSampleRate(), decoder.getBitrate(), 5, Files.newOutputStream(Paths.get("mynewfile.mp3")));
+Mp3Encoder encoder = new Mp3Encoder(decodedAudio.getChannelCount(), decodedAudio.getSampleRate(), decodedAudio.getBitRate(), 5, Files.newOutputStream(Paths.get(args[1])));
 encoder.write(decode);
 encoder.close();
 ```
@@ -70,11 +70,12 @@ encoder.close();
 
 ## Credits
 
-- [LAME website](https://lame.sourceforge.io/)
-- [License](https://sourceforge.net/p/lame/svn/HEAD/tree/tags/RELEASE__3_100/lame/COPYING)
-- [Windows binaries](https://www.rarewares.org/mp3-lame-libraries.php)
-- [MacOS binaries](https://www.rarewares.org/mp3-lame-bundle.php)
-- [Linux binaries](https://packages.debian.org/buster/libmp3lame0)
+- [LAME](https://lame.sourceforge.io/)
+- [LAME License](https://sourceforge.net/p/lame/svn/HEAD/tree/tags/RELEASE__3_100/lame/COPYING)
+- [mp3lame-sys](https://github.com/DoumanAsh/mp3lame-sys)
+- [minimp3-rs](https://github.com/germangb/minimp3-rs)
+- [minimp3](https://github.com/lieff/minimp3)
+- [jni-rs](https://github.com/jni-rs/jni-rs)
 
 <details>
   <summary>Other stuff</summary>
