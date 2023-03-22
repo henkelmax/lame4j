@@ -21,8 +21,10 @@ public class Mp3Decoder implements Audio, AutoCloseable {
     /**
      * Decodes the next frame in the mp3 file and returns the decoded audio data as PCM samples.
      * If the header of the mp3 file is not yet parsed, this method will parse the header.
+     * <br/>
+     * <b>NOTE</b>: If the mp3 file is invalid, the first frame will immediately return <code>null</code>.
      *
-     * @return the decoded audio data as PCM samples
+     * @return the decoded audio data as PCM samples or <code>null</code> if the end of the mp3 file is reached
      * @throws IOException if an I/O error occurs
      */
     private native short[] decodeNextFrame(InputStream stream) throws IOException;
@@ -78,15 +80,29 @@ public class Mp3Decoder implements Audio, AutoCloseable {
         return decoder == 0L;
     }
 
+    /**
+     * Decodes the mp3 file and returns the decoded audio data.
+     *
+     * @param inputStream the input stream of the mp3 file
+     * @return the decoded audio data as PCM samples
+     * @throws IOException              if an I/O error occurs or the mp3 file is invalid
+     * @throws UnknownPlatformException if the platform is not supported
+     */
     public static DecodedAudio decode(InputStream inputStream) throws IOException, UnknownPlatformException {
         try (Mp3Decoder decoder = new Mp3Decoder(inputStream)) {
             ShortArrayBuffer sampleBuffer = new ShortArrayBuffer(2048);
             while (true) {
                 short[] samples = decoder.decodeNextFrame();
                 if (samples == null) {
+                    if (sampleBuffer.size() <= 0) {
+                        throw new IOException("No audio data found");
+                    }
                     break;
                 }
                 sampleBuffer.writeShorts(samples);
+            }
+            if (!decoder.headerParsed()) {
+                throw new IOException("No header found");
             }
             return new DecodedAudio(decoder.getChannelCount(), decoder.getSampleRate(), decoder.getBitRate(), sampleBuffer.toShortArray());
         }
