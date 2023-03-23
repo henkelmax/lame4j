@@ -75,7 +75,7 @@ pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_decodeNextFrame<'a>(mut en
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_headersParsed(mut env: JNIEnv, obj: JObject) -> jboolean {
+pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_headerParsed(mut env: JNIEnv, obj: JObject) -> jboolean {
     let decoder_wrapper = match get_decoder(&mut env, &obj) {
         Some(decoder) => decoder,
         None => {
