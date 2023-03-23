@@ -4,6 +4,7 @@ use jni::objects::{JByteArray, JClass, JObject, JShortArray, JValue};
 use jni::sys::{jbyte, jint, jlong, jshort};
 use mp3lame_sys::{lame_close, lame_encode_buffer, lame_encode_buffer_interleaved, lame_encode_flush, lame_global_flags, lame_init, lame_init_params, lame_set_brate, lame_set_in_samplerate, lame_set_mode, lame_set_num_channels, lame_set_quality, MPEG_mode};
 use libc::{c_uchar};
+use crate::lame::exceptions::{throw_illegal_state_exception, throw_io_exception, throw_runtime_exception};
 
 #[allow(dead_code)]
 struct LameEncoder {
@@ -27,7 +28,7 @@ pub unsafe extern "C" fn Java_de_maxhenkel_lame4j_Mp3Encoder_createEncoder(mut e
 
     if i < 0 {
         drop(lame);
-        let _ = env.throw_new("java/io/IOException", format!("Failed to initialize LAME: {}", i));
+        throw_io_exception(&mut env, format!("Failed to initialize LAME: {}", i));
         return 0;
     }
 
@@ -52,13 +53,14 @@ pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Encoder_writeInternal<'a>(mut env:
     let input_length = match env.get_array_length(&input) {
         Ok(input_length) => input_length as usize,
         Err(e) => {
-            throw_runtime_exception(&mut env, format!("Failed to get input length: {}", e));
+            throw_io_exception(&mut env, format!("Failed to get input length: {}", e));
             return JByteArray::from(JObject::null());
         }
     };
 
     if input_length % lame.channels as usize != 0 {
-        let _ = env.throw_new("java/lang/IllegalArgumentException", "Input length must be a multiple of the number of channels");
+        throw_io_exception(&mut env, "Input length must be a multiple of the number of channels");
+        return JByteArray::from(JObject::null());
     }
 
     let mut input_vec = vec![0i16 as jshort; input_length];
@@ -66,7 +68,7 @@ pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Encoder_writeInternal<'a>(mut env:
     match env.get_short_array_region(input, 0, &mut input_vec) {
         Ok(_) => {}
         Err(e) => {
-            throw_runtime_exception(&mut env, format!("Failed to convert short array: {}", e));
+            throw_io_exception(&mut env, format!("Failed to convert short array: {}", e));
             return JByteArray::from(JObject::null());
         }
     };
@@ -80,14 +82,14 @@ pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Encoder_writeInternal<'a>(mut env:
     };
 
     if num_bytes < 0 {
-        let _ = env.throw_new("java/io/IOException", format!("Failed to encode samples: {}", num_bytes));
+        throw_io_exception(&mut env, format!("Failed to encode samples: {}", num_bytes));
         return JByteArray::from(JObject::null());
     }
 
     let output = match env.new_byte_array(num_bytes as i32) {
         Ok(arr) => arr,
         Err(e) => {
-            throw_runtime_exception(&mut env, format!("Failed to create byte array: {}", e));
+            throw_io_exception(&mut env, format!("Failed to create byte array: {}", e));
             return JByteArray::from(JObject::null());
         }
     };
@@ -95,7 +97,7 @@ pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Encoder_writeInternal<'a>(mut env:
     match env.set_byte_array_region(&output, 0, buffer.as_slice()[..num_bytes as usize].as_ref()) {
         Ok(_) => {}
         Err(e) => {
-            throw_runtime_exception(&mut env, format!("Failed populate byte array: {}", e));
+            throw_io_exception(&mut env, format!("Failed populate byte array: {}", e));
             return JByteArray::from(JObject::null());
         }
     };
@@ -123,7 +125,7 @@ pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Encoder_flush<'a>(mut env: JNIEnv<
     let output = match env.new_byte_array(mum_bytes_flush as i32) {
         Ok(arr) => arr,
         Err(e) => {
-            throw_runtime_exception(&mut env, format!("Failed to create byte array: {}", e));
+            throw_io_exception(&mut env, format!("Failed to create byte array: {}", e));
             return JByteArray::from(JObject::null());
         }
     };
@@ -131,7 +133,7 @@ pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Encoder_flush<'a>(mut env: JNIEnv<
     match env.set_byte_array_region(&output, 0, buffer.as_slice()[..mum_bytes_flush as usize].as_ref()) {
         Ok(_) => {}
         Err(e) => {
-            throw_runtime_exception(&mut env, format!("Failed populate byte array: {}", e));
+            throw_io_exception(&mut env, format!("Failed populate byte array: {}", e));
             return JByteArray::from(JObject::null());
         }
     };
@@ -180,7 +182,7 @@ fn get_lame_from_pointer(pointer: jlong) -> &'static mut LameEncoder {
 fn get_lame(env: &mut JNIEnv, obj: &JObject) -> Option<&'static mut LameEncoder> {
     let pointer = get_pointer(env, obj);
     if pointer == 0 {
-        let _ = env.throw(("java/lang/IllegalStateException", "Encoder is closed"));
+        throw_illegal_state_exception(env, "Encoder is closed");
         return None;
     }
     return Some(get_lame_from_pointer(pointer));
@@ -190,8 +192,4 @@ fn create_pointer(lame: LameEncoder) -> jlong {
     let lame = Box::new(lame);
     let raw = Box::into_raw(lame);
     return raw as jlong;
-}
-
-fn throw_runtime_exception(env: &mut JNIEnv, message: String) {
-    let _ = env.throw(("java/lang/RuntimeException", message));
 }

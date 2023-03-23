@@ -3,6 +3,7 @@ use jni::{JNIEnv};
 use jni::objects::{JClass, JObject, JShortArray, JValue};
 use jni::sys::{jboolean, jint, jlong};
 use minimp3::{Decoder, Error};
+use crate::lame::exceptions::{throw_illegal_state_exception, throw_io_exception, throw_runtime_exception};
 
 struct DecoderWrapper {
     decoder: Decoder<JavaInputStream>,
@@ -47,7 +48,7 @@ pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_decodeNextFrame<'a>(mut en
             return JShortArray::from(JObject::null());
         }
         Err(e) => {
-            let _ = env.throw(("java/io/IOException", format!("Failed to decode frame: {}", e)));
+            throw_io_exception(&mut env, format!("Failed to decode frame: {}", e));
             return JShortArray::from(JObject::null());
         }
     };
@@ -59,14 +60,14 @@ pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_decodeNextFrame<'a>(mut en
     let short_array = match env.new_short_array(frame.data.len() as i32) {
         Ok(array) => array,
         Err(e) => {
-            throw_runtime_exception(&mut env, format!("Failed to create short array: {}", e));
+            throw_io_exception(&mut env, format!("Failed to create short array: {}", e));
             return JShortArray::from(JObject::null());
         }
     };
     match env.set_short_array_region(&short_array, 0, frame.data.as_slice()) {
         Ok(_) => {}
         Err(e) => {
-            throw_runtime_exception(&mut env, format!("Failed populate short array: {}", e));
+            throw_io_exception(&mut env, format!("Failed populate short array: {}", e));
             return JShortArray::from(JObject::null());
         }
     }
@@ -213,7 +214,7 @@ fn get_decoder_from_pointer(pointer: jlong) -> &'static mut DecoderWrapper {
 fn get_decoder(env: &mut JNIEnv, obj: &JObject) -> Option<&'static mut DecoderWrapper> {
     let pointer = get_pointer(env, obj);
     if pointer == 0 {
-        let _ = env.throw(("java/lang/IllegalStateException", "Decoder is closed"));
+        throw_illegal_state_exception(env, "Decoder is closed");
         return None;
     }
     return Some(get_decoder_from_pointer(pointer));
@@ -223,8 +224,4 @@ fn create_pointer(lame: DecoderWrapper) -> jlong {
     let lame = Box::new(lame);
     let raw = Box::into_raw(lame);
     return raw as jlong;
-}
-
-fn throw_runtime_exception(env: &mut JNIEnv, message: String) {
-    let _ = env.throw(("java/lang/RuntimeException", message));
 }

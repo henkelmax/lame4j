@@ -38,7 +38,7 @@ public class Mp3Encoder implements AutoCloseable {
         outputStream.write(buffer, 0, buffer.length);
     }
 
-    private native byte[] flush();
+    private native byte[] flush() throws IOException;
 
     private native void destroyEncoder();
 
