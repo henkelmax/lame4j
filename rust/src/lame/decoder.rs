@@ -13,9 +13,9 @@ struct DecoderWrapper {
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_createDecoder(env: JNIEnv<'static>, _class: JClass) -> jlong {
+pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_createDecoder(_env: JNIEnv, _class: JClass) -> jlong {
     let stream_wrapper = JavaInputStream {
-        env,
+        env: None,
         input_stream: None,
     };
 
@@ -41,8 +41,18 @@ pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_decodeNextFrame<'a>(mut en
     };
 
     decoder_wrapper.decoder.reader_mut().input_stream = Some(stream);
+    decoder_wrapper.decoder.reader_mut().env = Some(env);
 
-    let frame = match decoder_wrapper.decoder.next_frame() {
+    let decode_result = decoder_wrapper.decoder.next_frame();
+
+    let mut env = match decoder_wrapper.decoder.reader_mut().env.take() {
+        Some(env) => env,
+        None => {
+            panic!("Cannot get Java environment");
+        }
+    };
+
+    let frame = match decode_result {
         Ok(frame) => frame,
         Err(Error::Eof) => {
             return JShortArray::from(JObject::null());
@@ -131,7 +141,7 @@ pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_destroyDecoder(mut env: JN
 }
 
 struct JavaInputStream {
-    env: JNIEnv<'static>,
+    env: Option<JNIEnv<'static>>,
     input_stream: Option<JObject<'static>>,
 }
 
@@ -141,9 +151,17 @@ impl Read for JavaInputStream {
             return Ok(0);
         }
 
-        let byte_array = match self.env.new_byte_array(buf.len() as i32) {
+        let mut env = match self.env.take() {
+            Some(env) => env,
+            None => {
+                return Err(std::io::Error::new(ErrorKind::Other, "Environment unavailable"));
+            }
+        };
+
+        let byte_array = match env.new_byte_array(buf.len() as i32) {
             Ok(byte_array) => byte_array,
             Err(e) => {
+                self.env = Some(env);
                 return Err(std::io::Error::new(ErrorKind::Other, e));
             }
         };
@@ -154,35 +172,42 @@ impl Read for JavaInputStream {
         let input_stream = match &self.input_stream {
             Some(input_stream) => input_stream,
             None => {
+                self.env = Some(env);
                 return Err(std::io::Error::new(ErrorKind::Other, "Input stream unavailable"));
             }
         };
 
-        let value = match self.env.call_method(input_stream, "read", "([B)I", &[jvalue]) {
+        let value = match env.call_method(input_stream, "read", "([B)I", &[jvalue]) {
             Ok(value) => value,
             Err(e) => {
+                self.env = Some(env);
                 return Err(std::io::Error::new(ErrorKind::Other, e));
             }
         };
         let num_bytes_read = match value.i() {
             Ok(num_bytes_read) => num_bytes_read,
             Err(e) => {
+                self.env = Some(env);
                 return Err(std::io::Error::new(ErrorKind::Other, e));
             }
         };
 
         if num_bytes_read <= 0 {
+            self.env = Some(env);
             return Ok(0);
         }
 
-        let vec = match self.env.convert_byte_array(byte_array) {
+        let vec = match env.convert_byte_array(byte_array) {
             Ok(vec) => vec,
             Err(e) => {
+                self.env = Some(env);
                 return Err(std::io::Error::new(ErrorKind::Other, e));
             }
         };
 
         buf[..num_bytes_read as usize].copy_from_slice(&vec[..num_bytes_read as usize]);
+
+        self.env = Some(env);
 
         return Ok(num_bytes_read as usize);
     }
