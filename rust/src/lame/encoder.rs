@@ -27,7 +27,7 @@ pub unsafe extern "C" fn Java_de_maxhenkel_lame4j_Mp3Encoder_createEncoder(mut e
     let i = lame_init_params(lame);
 
     if i < 0 {
-        drop(lame);
+        lame_close(lame);
         throw_io_exception(&mut env, format!("Failed to initialize LAME: {}", i));
         return 0;
     }
