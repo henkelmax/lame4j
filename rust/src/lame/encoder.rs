@@ -16,7 +16,7 @@ struct LameEncoder {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_de_maxhenkel_lame4j_Mp3Encoder_createEncoder(mut env: JNIEnv, _class: JClass, channels: jint, sample_rate: jint, bit_rate: jint, quality: jint) -> jlong {
+pub unsafe extern "C" fn Java_de_maxhenkel_lame4j_Mp3Encoder_createEncoder0(mut env: JNIEnv, _class: JClass, channels: jint, sample_rate: jint, bit_rate: jint, quality: jint) -> jlong {
     let lame = lame_init();
 
     lame_set_num_channels(lame, channels as i32);
@@ -42,7 +42,7 @@ pub unsafe extern "C" fn Java_de_maxhenkel_lame4j_Mp3Encoder_createEncoder(mut e
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Encoder_writeInternal<'a>(mut env: JNIEnv<'a>, obj: JObject<'a>, input: JShortArray<'a>) -> JByteArray<'a> {
+pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Encoder_writeInternal0<'a>(mut env: JNIEnv<'a>, obj: JObject<'a>, input: JShortArray<'a>) -> JByteArray<'a> {
     let lame = match get_lame(&mut env, &obj) {
         Some(lame) => lame,
         None => {
@@ -110,7 +110,7 @@ fn estimate_mp3_buffer_size(num_samples: i32) -> usize {
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Encoder_flush<'a>(mut env: JNIEnv<'a>, obj: JObject<'a>) -> JByteArray<'a> {
+pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Encoder_flush0<'a>(mut env: JNIEnv<'a>, obj: JObject<'a>) -> JByteArray<'a> {
     let lame = match get_lame(&mut env, &obj) {
         Some(lame) => lame,
         None => {
@@ -142,7 +142,7 @@ pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Encoder_flush<'a>(mut env: JNIEnv<
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Encoder_destroyEncoder(mut env: JNIEnv, obj: JObject) {
+pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Encoder_destroyEncoder0(mut env: JNIEnv, obj: JObject) {
     let pointer = get_pointer(&mut env, &obj);
 
     if pointer == 0 {

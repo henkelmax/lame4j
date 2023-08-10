@@ -13,10 +13,12 @@ public class Mp3Decoder implements Audio, AutoCloseable {
     public Mp3Decoder(InputStream inputStream) throws IOException, UnknownPlatformException {
         Lame.load();
         this.inputStream = inputStream;
-        decoder = createDecoder();
+        decoder = createDecoder0();
     }
 
-    private static native long createDecoder();
+    private static native long createDecoder0();
+
+    private native short[] decodeNextFrame0(InputStream stream) throws IOException;
 
     /**
      * Decodes the next frame in the mp3 file and returns the decoded audio data as PCM samples.
@@ -27,31 +29,55 @@ public class Mp3Decoder implements Audio, AutoCloseable {
      * @return the decoded audio data as PCM samples or <code>null</code> if the end of the mp3 file is reached
      * @throws IOException if an I/O error occurs
      */
-    private native short[] decodeNextFrame(InputStream stream) throws IOException;
-
     public short[] decodeNextFrame() throws IOException {
-        return decodeNextFrame(inputStream);
+        synchronized (this) {
+            return decodeNextFrame0(inputStream);
+        }
     }
+
+    private native boolean headerParsed0();
 
     /**
      * @return if the header of the mp3 file is parsed
      */
-    public native boolean headerParsed();
+    public boolean headerParsed() {
+        synchronized (this) {
+            return headerParsed0();
+        }
+    }
+
+    private native int getChannelCount0();
 
     /**
      * @return the number of channels of the decoded audio or -1 if the header of the mp3 file is not yet parsed
      */
-    public native int getChannelCount();
+    public int getChannelCount() {
+        synchronized (this) {
+            return getChannelCount0();
+        }
+    }
+
+    private native int getBitRate0();
 
     /**
      * @return the bitrate of the mp3 file or -1 if the header of the mp3 file is not yet parsed
      */
-    public native int getBitRate();
+    public int getBitRate() {
+        synchronized (this) {
+            return getBitRate0();
+        }
+    }
+
+    private native int getSampleRate0();
 
     /**
      * @return the sample rate of the decoded audio or -1 if the header of the mp3 file is not yet parsed
      */
-    public native int getSampleRate();
+    public int getSampleRate() {
+        synchronized (this) {
+            return getSampleRate0();
+        }
+    }
 
     /**
      * Creates an AudioFormat object for the decoded audio.
@@ -67,17 +93,21 @@ public class Mp3Decoder implements Audio, AutoCloseable {
         return Audio.super.createAudioFormat();
     }
 
-    private native void destroyDecoder();
+    private native void destroyDecoder0();
 
     @Override
     public void close() throws IOException {
-        destroyDecoder();
-        decoder = 0L;
-        inputStream.close();
+        synchronized (this) {
+            destroyDecoder0();
+            decoder = 0L;
+            inputStream.close();
+        }
     }
 
     public boolean isClosed() {
-        return decoder == 0L;
+        synchronized (this) {
+            return decoder == 0L;
+        }
     }
 
     /**

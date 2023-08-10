@@ -13,7 +13,7 @@ struct DecoderWrapper {
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_createDecoder(_env: JNIEnv, _class: JClass) -> jlong {
+pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_createDecoder0(_env: JNIEnv, _class: JClass) -> jlong {
     let stream_wrapper = JavaInputStream {
         env: None,
         input_stream: None,
@@ -32,7 +32,7 @@ pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_createDecoder(_env: JNIEnv
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_decodeNextFrame<'a>(mut env: JNIEnv<'static>, obj: JObject<'a>, stream: JObject<'static>) -> JShortArray<'a> {
+pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_decodeNextFrame0<'a>(mut env: JNIEnv<'static>, obj: JObject<'a>, stream: JObject<'static>) -> JShortArray<'a> {
     let decoder_wrapper = match get_decoder(&mut env, &obj) {
         Some(decoder) => decoder,
         None => {
@@ -85,7 +85,7 @@ pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_decodeNextFrame<'a>(mut en
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_headerParsed(mut env: JNIEnv, obj: JObject) -> jboolean {
+pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_headerParsed0(mut env: JNIEnv, obj: JObject) -> jboolean {
     let decoder_wrapper = match get_decoder(&mut env, &obj) {
         Some(decoder) => decoder,
         None => {
@@ -96,7 +96,7 @@ pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_headerParsed(mut env: JNIE
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_getChannelCount(mut env: JNIEnv, obj: JObject) -> jint {
+pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_getChannelCount0(mut env: JNIEnv, obj: JObject) -> jint {
     let decoder_wrapper = match get_decoder(&mut env, &obj) {
         Some(decoder) => decoder,
         None => {
@@ -107,7 +107,7 @@ pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_getChannelCount(mut env: J
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_getBitRate(mut env: JNIEnv, obj: JObject) -> jint {
+pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_getBitRate0(mut env: JNIEnv, obj: JObject) -> jint {
     let decoder_wrapper = match get_decoder(&mut env, &obj) {
         Some(decoder) => decoder,
         None => {
@@ -118,7 +118,7 @@ pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_getBitRate(mut env: JNIEnv
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_getSampleRate(mut env: JNIEnv, obj: JObject) -> jint {
+pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_getSampleRate0(mut env: JNIEnv, obj: JObject) -> jint {
     let decoder_wrapper = match get_decoder(&mut env, &obj) {
         Some(decoder) => decoder,
         None => {
@@ -129,7 +129,7 @@ pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_getSampleRate(mut env: JNI
 }
 
 #[no_mangle]
-pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_destroyDecoder(mut env: JNIEnv, obj: JObject) {
+pub extern "C" fn Java_de_maxhenkel_lame4j_Mp3Decoder_destroyDecoder0(mut env: JNIEnv, obj: JObject) {
     let pointer = get_pointer(&mut env, &obj);
 
     if pointer == 0 {

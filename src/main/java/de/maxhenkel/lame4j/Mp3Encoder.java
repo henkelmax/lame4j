@@ -19,13 +19,13 @@ public class Mp3Encoder implements AutoCloseable {
      */
     public Mp3Encoder(int channels, int sampleRate, int bitRate, int quality, OutputStream outputStream) throws IOException, UnknownPlatformException {
         Lame.load();
-        this.lame = createEncoder(channels, sampleRate, bitRate, quality);
+        this.lame = createEncoder0(channels, sampleRate, bitRate, quality);
         this.outputStream = outputStream;
     }
 
-    private static native long createEncoder(int channels, int sampleRate, int bitRate, int quality) throws IOException;
+    private static native long createEncoder0(int channels, int sampleRate, int bitRate, int quality) throws IOException;
 
-    private native byte[] writeInternal(short[] input) throws IOException;
+    private native byte[] writeInternal0(short[] input) throws IOException;
 
     /**
      * Writes the given samples to the output stream.
@@ -34,13 +34,15 @@ public class Mp3Encoder implements AutoCloseable {
      * @throws IOException if an I/O error occurs
      */
     public void write(short[] input) throws IOException {
-        byte[] buffer = writeInternal(input);
-        outputStream.write(buffer, 0, buffer.length);
+        synchronized (this) {
+            byte[] buffer = writeInternal0(input);
+            outputStream.write(buffer, 0, buffer.length);
+        }
     }
 
-    private native byte[] flush() throws IOException;
+    private native byte[] flush0() throws IOException;
 
-    private native void destroyEncoder();
+    private native void destroyEncoder0();
 
     /**
      * Finalizes the mp3 file and closes the output stream.
@@ -49,17 +51,21 @@ public class Mp3Encoder implements AutoCloseable {
      */
     @Override
     public void close() throws IOException {
-        byte[] flushBuffer = flush();
+        synchronized (this) {
+            byte[] flushBuffer = flush0();
 
-        outputStream.write(flushBuffer, 0, flushBuffer.length);
+            outputStream.write(flushBuffer, 0, flushBuffer.length);
 
-        destroyEncoder();
-        lame = 0L;
-        outputStream.close();
+            destroyEncoder0();
+            lame = 0L;
+            outputStream.close();
+        }
     }
 
     public boolean isClosed() {
-        return lame == 0L;
+        synchronized (this) {
+            return lame == 0L;
+        }
     }
 
 }
