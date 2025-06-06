@@ -1,13 +1,13 @@
 [package]
 name = "lame4j"
-version = "2.0.3"
+version = "2.0.4"
 edition = "2021"
 
 [dependencies]
 jni = "0.21.1"
-mp3lame-sys = "0.1.4"
-libc = "0.2.140"
-minimp3 = "0.5"
+mp3lame-sys = "0.1.9"
+libc = "0.2.172"
+minimp3 = "0.5.1"
 
 [lib]
 crate_type = ["cdylib"]

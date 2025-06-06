@@ -21,7 +21,7 @@ This library includes natives for:
 <dependency>
   <groupId>de.maxhenkel.lame4j</groupId>
   <artifactId>lame4j</artifactId>
-  <version>2.0.3</version>
+  <version>2.0.4</version>
 </dependency>
 
 <repositories>
@@ -36,7 +36,7 @@ This library includes natives for:
 
 ``` groovy
 dependencies {
-  implementation 'de.maxhenkel.lame4j:lame4j:2.0.3'
+  implementation 'de.maxhenkel.lame4j:lame4j:2.0.4'
 }
 
 repositories {
