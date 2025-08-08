@@ -50,7 +50,7 @@ JNIEXPORT jint JNICALL Java_de_maxhenkel_lame4j_Mp3Decoder_getMaxSamplesPerFrame
     return MINIMP3_MAX_SAMPLES_PER_FRAME;
 }
 
-JNIEXPORT jint JNICALL Java_de_maxhenkel_lame4j_Mp3Decoder_decodeNextFrame0(
+JNIEXPORT jlong JNICALL Java_de_maxhenkel_lame4j_Mp3Decoder_decodeNextFrame0(
     JNIEnv *env,
     jobject obj,
     const jlong decoder_pointer,
@@ -98,7 +98,10 @@ JNIEXPORT jint JNICALL Java_de_maxhenkel_lame4j_Mp3Decoder_decodeNextFrame0(
 
     (*env)->SetShortArrayRegion(env, output, 0, frames_used * decoder->channels, audio_output);
 
-    return frames_used * decoder->channels;
+    const int32_t frames = frames_used * decoder->channels;
+    const int32_t bytes = frame_info.frame_bytes;
+
+    return (jlong) (jint) frames << 32 | (jlong) bytes & 0xFFFFFFFFL;
 }
 
 JNIEXPORT jint JNICALL Java_de_maxhenkel_lame4j_Mp3Decoder_getChannelCount0(

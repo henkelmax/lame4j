@@ -1,5 +1,5 @@
-import de.maxhenkel.lame4j.Mp3Encoder;
-import de.maxhenkel.lame4j.UnknownPlatformException;
+package de.maxhenkel.lame4j;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

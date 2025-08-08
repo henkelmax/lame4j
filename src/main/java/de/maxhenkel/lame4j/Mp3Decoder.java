@@ -10,6 +10,8 @@ public class Mp3Decoder implements Audio, AutoCloseable {
     private long pointer;
     private final InputStream inputStream;
     private final byte[] inBuffer;
+    private final byte[] leftoverBuffer;
+    private int leftoverBufferLength;
     private final short[] outBuffer;
 
     public Mp3Decoder(InputStream inputStream) throws IOException, UnknownPlatformException {
@@ -17,6 +19,8 @@ public class Mp3Decoder implements Audio, AutoCloseable {
         pointer = createDecoder0();
         this.inputStream = inputStream;
         inBuffer = new byte[16 * 1024];
+        leftoverBuffer = new byte[16 * 1024];
+        leftoverBufferLength = 0;
         outBuffer = new short[getMaxSamplesPerFrame0()];
     }
 
@@ -24,7 +28,7 @@ public class Mp3Decoder implements Audio, AutoCloseable {
 
     private static native int getMaxSamplesPerFrame0();
 
-    private native int decodeNextFrame0(long decoderPointer, byte[] input, int inputLength, short[] output) throws IOException;
+    private native long decodeNextFrame0(long decoderPointer, byte[] input, int inputLength, short[] output) throws IOException;
 
     /**
      * Decodes the next frame in the mp3 file and returns the decoded audio data as PCM samples.
@@ -37,13 +41,22 @@ public class Mp3Decoder implements Audio, AutoCloseable {
      */
     public short[] decodeNextFrame() throws IOException {
         synchronized (this) {
-            int bytesRead = inputStream.read(inBuffer);
+            System.arraycopy(leftoverBuffer, 0, inBuffer, 0, leftoverBufferLength);
+            int bytesRead = inputStream.read(inBuffer, leftoverBufferLength, inBuffer.length - leftoverBufferLength);
             if (bytesRead < 0) {
-                return null;
+                if (leftoverBufferLength <= 0) {
+                    return null;
+                }
+                bytesRead = 0;
             }
-            int samplesDecoded = decodeNextFrame0(pointer, inBuffer, bytesRead, outBuffer);
+            int bytesToUse = leftoverBufferLength + bytesRead;
+            long result = decodeNextFrame0(pointer, inBuffer, bytesToUse, outBuffer);
+            int samplesDecoded = (int) (result >> 32);
+            int bytesToAdvance = (int) result;
             short[] samples = new short[samplesDecoded];
             System.arraycopy(outBuffer, 0, samples, 0, samplesDecoded);
+            leftoverBufferLength = bytesToUse - bytesToAdvance;
+            System.arraycopy(inBuffer, bytesToAdvance, leftoverBuffer, 0, leftoverBufferLength);
             return samples;
         }
     }
