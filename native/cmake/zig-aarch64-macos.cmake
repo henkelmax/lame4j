@@ -1,0 +1,11 @@
+set(TARGET_TRIPLE "aarch64-macos")
+set(CMAKE_SYSTEM_NAME "Darwin")
+set(CMAKE_SYSTEM_PROCESSOR "arm64")
+
+if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+    set(CMAKE_INSTALL_NAME_TOOL ${CMAKE_CURRENT_LIST_DIR}/dummy.bat)
+else ()
+    set(CMAKE_INSTALL_NAME_TOOL ${CMAKE_CURRENT_LIST_DIR}/dummy)
+endif ()
+
+include("${CMAKE_CURRENT_LIST_DIR}/zig-base.cmake")

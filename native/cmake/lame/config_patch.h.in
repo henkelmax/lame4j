@@ -1,0 +1,147 @@
+#ifndef LAME_CONFIG_H_PATCH
+#define LAME_CONFIG_H_PATCH
+
+// Compiler / builtin-size detection
+// prefer compiler-provided __SIZEOF_*__ (GCC/Clang), fallback to platform macros
+#if defined(__SIZEOF_INT__)
+  #define SIZEOF_INT           __SIZEOF_INT__
+  #define SIZEOF_LONG          __SIZEOF_LONG__
+  #define SIZEOF_LONG_LONG     __SIZEOF_LONG_LONG__
+  #define SIZEOF_SHORT         __SIZEOF_SHORT__
+  #define SIZEOF_DOUBLE        __SIZEOF_DOUBLE__
+  #define SIZEOF_FLOAT         __SIZEOF_FLOAT__
+#elif defined(_MSC_VER)
+  // MSVC / Windows (LLP64): int=4, long=4, long long=8
+  #define SIZEOF_INT           4
+  #define SIZEOF_LONG          4
+  #define SIZEOF_LONG_LONG     8
+  #define SIZEOF_SHORT         2
+  #define SIZEOF_DOUBLE        8
+  #define SIZEOF_FLOAT         4
+#else
+  // Best-effort heuristics for other compilers/platforms
+  #if defined(__LP64__) || defined(_LP64) || defined(__x86_64__) || defined(__aarch64__)
+    // LP64 platforms: long is 8
+    #define SIZEOF_INT         4
+    #define SIZEOF_LONG        8
+    #define SIZEOF_LONG_LONG   8
+    #define SIZEOF_SHORT       2
+    #define SIZEOF_DOUBLE      8
+    #define SIZEOF_FLOAT       4
+  #else
+    // default to common 32-bit/ILP32 assumptions
+    #define SIZEOF_INT         4
+    #define SIZEOF_LONG        4
+    #define SIZEOF_LONG_LONG   8
+    #define SIZEOF_SHORT       2
+    #define SIZEOF_DOUBLE      8
+    #define SIZEOF_FLOAT       4
+  #endif
+#endif
+
+// Header availability detection
+// Uses __has_include where available, otherwise make sensible defaults
+#if defined(__has_include)
+  #if __has_include(<stdint.h>)
+    #define HAVE_STDINT_H 1
+  #endif
+  #if __has_include(<inttypes.h>)
+    #define HAVE_INTTYPES_H 1
+  #endif
+  #if __has_include(<errno.h>)
+    #define HAVE_ERRNO_H 1
+  #endif
+  #if __has_include(<fcntl.h>)
+    #define HAVE_FCNTL_H 1
+  #endif
+  #if __has_include(<string.h>)
+    #define HAVE_STRING_H 1
+  #endif
+  #if __has_include(<unistd.h>)
+    #define HAVE_UNISTD_H 1
+  #endif
+#else
+  // Conservative defaults for compilers without __has_include
+  #if defined(_MSC_VER)
+    // modern MSVC has stdint.h
+    #define HAVE_STDINT_H 1
+    #define HAVE_INTTYPES_H 0
+    #define HAVE_ERRNO_H 1
+    #define HAVE_FCNTL_H 1
+    #define HAVE_STRING_H 1
+    #define HAVE_UNISTD_H 0
+  #else
+    // Assume POSIX-like modern toolchains
+    #define HAVE_STDINT_H 1
+    #define HAVE_INTTYPES_H 1
+    #define HAVE_ERRNO_H 1
+    #define HAVE_FCNTL_H 1
+    #define HAVE_STRING_H 1
+    #define HAVE_UNISTD_H 1
+  #endif
+#endif
+
+// Pull in standard headers if available
+#ifdef HAVE_STDINT_H
+  #include <stdint.h>
+#endif
+#ifdef HAVE_INTTYPES_H
+  #include <inttypes.h>
+#endif
+#ifdef HAVE_ERRNO_H
+  #include <errno.h>
+#endif
+#ifdef HAVE_FCNTL_H
+  #include <fcntl.h>
+#endif
+#ifdef HAVE_STRING_H
+  #include <string.h>
+#endif
+#ifdef HAVE_UNISTD_H
+  #include <unistd.h>
+#endif
+
+// Feature macros that LAME expects
+
+// Basic C library / compiler capabilities
+#define PROTOTYPES 1
+#define STDC_HEADERS 1
+
+// LAME build-specific flag (requested by LAME source in various places)
+#define LAME_LIBRARY_BUILD 1
+
+// Useful small optimizations/assumptions for static builds
+#define USE_FAST_LOG 1
+
+// Common header-function availability
+#define HAVE_STRCHR 1
+#define HAVE_MEMCPY 1
+
+// Minimal stdint fallbacks if <stdint.h> is missing
+// Only used on very old toolchains; modern compilers will use <stdint.h>.
+#if !defined(HAVE_STDINT_H) || (HAVE_STDINT_H == 0)
+typedef signed char        int8_t;
+typedef short              int16_t;
+typedef int                int32_t;
+typedef long long          int64_t;
+
+typedef unsigned char      uint8_t;
+typedef unsigned short     uint16_t;
+typedef unsigned int       uint32_t;
+typedef unsigned long long uint64_t;
+#endif
+
+// Floating typedef fallbacks used by LAME
+#ifndef HAVE_IEEE754_FLOAT64_T
+typedef double ieee754_float64_t;
+#endif
+
+#ifndef HAVE_IEEE754_FLOAT32_T
+typedef float  ieee754_float32_t;
+#endif
+
+#ifndef HAVE_IEEE854_FLOAT80_T
+typedef long double ieee854_float80_t;
+#endif
+
+#endif

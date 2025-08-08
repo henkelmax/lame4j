@@ -14,8 +14,14 @@ import static org.junit.jupiter.api.Assertions.*;
 public class Mp3DecoderTest {
 
     @Test
+    @DisplayName("Create decoder")
+    void createDecoder() throws IOException, UnknownPlatformException {
+        new Mp3Decoder(new ByteArrayInputStream(new byte[0])).close();
+    }
+
+    @Test
     @DisplayName("Decode")
-    void encode() throws IOException, UnknownPlatformException {
+    void decode() throws IOException, UnknownPlatformException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Mp3Encoder encoder = new Mp3Encoder(1, 48000, 128, 5, out);
         for (int i = 0; i < 10; i++) {

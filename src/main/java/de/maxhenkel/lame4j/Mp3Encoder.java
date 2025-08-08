@@ -5,7 +5,7 @@ import java.io.OutputStream;
 
 public class Mp3Encoder implements AutoCloseable {
 
-    private long lame;
+    private long pointer;
     private final OutputStream outputStream;
 
     /**
@@ -19,13 +19,13 @@ public class Mp3Encoder implements AutoCloseable {
      */
     public Mp3Encoder(int channels, int sampleRate, int bitRate, int quality, OutputStream outputStream) throws IOException, UnknownPlatformException {
         Lame.load();
-        this.lame = createEncoder0(channels, sampleRate, bitRate, quality);
+        this.pointer = createEncoder0(channels, sampleRate, bitRate, quality);
         this.outputStream = outputStream;
     }
 
     private static native long createEncoder0(int channels, int sampleRate, int bitRate, int quality) throws IOException;
 
-    private native byte[] writeInternal0(short[] input) throws IOException;
+    private native byte[] writeInternal0(long encoderPointer, short[] input) throws IOException;
 
     /**
      * Writes the given samples to the output stream.
@@ -35,14 +35,14 @@ public class Mp3Encoder implements AutoCloseable {
      */
     public void write(short[] input) throws IOException {
         synchronized (this) {
-            byte[] buffer = writeInternal0(input);
+            byte[] buffer = writeInternal0(pointer, input);
             outputStream.write(buffer, 0, buffer.length);
         }
     }
 
-    private native byte[] flush0() throws IOException;
+    private native byte[] flush0(long encoderPointer) throws IOException;
 
-    private native void destroyEncoder0();
+    private native void destroyEncoder0(long encoderPointer);
 
     /**
      * Finalizes the mp3 file and closes the output stream.
@@ -52,19 +52,19 @@ public class Mp3Encoder implements AutoCloseable {
     @Override
     public void close() throws IOException {
         synchronized (this) {
-            byte[] flushBuffer = flush0();
+            byte[] flushBuffer = flush0(pointer);
 
             outputStream.write(flushBuffer, 0, flushBuffer.length);
 
-            destroyEncoder0();
-            lame = 0L;
+            destroyEncoder0(pointer);
+            pointer = 0L;
             outputStream.close();
         }
     }
 
     public boolean isClosed() {
         synchronized (this) {
-            return lame == 0L;
+            return pointer == 0L;
         }
     }
 

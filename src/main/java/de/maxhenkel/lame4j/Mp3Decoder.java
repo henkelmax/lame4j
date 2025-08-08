@@ -7,18 +7,24 @@ import java.io.InputStream;
 
 public class Mp3Decoder implements Audio, AutoCloseable {
 
-    private long decoder;
+    private long pointer;
     private final InputStream inputStream;
+    private final byte[] inBuffer;
+    private final short[] outBuffer;
 
     public Mp3Decoder(InputStream inputStream) throws IOException, UnknownPlatformException {
         Lame.load();
+        pointer = createDecoder0();
         this.inputStream = inputStream;
-        decoder = createDecoder0();
+        inBuffer = new byte[16 * 1024];
+        outBuffer = new short[getMaxSamplesPerFrame0()];
     }
 
     private static native long createDecoder0();
 
-    private native short[] decodeNextFrame0(InputStream stream) throws IOException;
+    private static native int getMaxSamplesPerFrame0();
+
+    private native int decodeNextFrame0(long decoderPointer, byte[] input, int inputLength, short[] output) throws IOException;
 
     /**
      * Decodes the next frame in the mp3 file and returns the decoded audio data as PCM samples.
@@ -31,51 +37,56 @@ public class Mp3Decoder implements Audio, AutoCloseable {
      */
     public short[] decodeNextFrame() throws IOException {
         synchronized (this) {
-            return decodeNextFrame0(inputStream);
+            int bytesRead = inputStream.read(inBuffer);
+            if (bytesRead < 0) {
+                return null;
+            }
+            int samplesDecoded = decodeNextFrame0(pointer, inBuffer, bytesRead, outBuffer);
+            short[] samples = new short[samplesDecoded];
+            System.arraycopy(outBuffer, 0, samples, 0, samplesDecoded);
+            return samples;
         }
     }
-
-    private native boolean headerParsed0();
 
     /**
      * @return if the header of the mp3 file is parsed
      */
     public boolean headerParsed() {
         synchronized (this) {
-            return headerParsed0();
+            return getChannelCount0(pointer) >= 0 && getSampleRate0(pointer) >= 0 && getBitRate0(pointer) >= 0;
         }
     }
 
-    private native int getChannelCount0();
+    private native int getChannelCount0(long decoderPointer);
 
     /**
      * @return the number of channels of the decoded audio or -1 if the header of the mp3 file is not yet parsed
      */
     public int getChannelCount() {
         synchronized (this) {
-            return getChannelCount0();
+            return getChannelCount0(pointer);
         }
     }
 
-    private native int getBitRate0();
+    private native int getBitRate0(long decoderPointer);
 
     /**
      * @return the bitrate of the mp3 file or -1 if the header of the mp3 file is not yet parsed
      */
     public int getBitRate() {
         synchronized (this) {
-            return getBitRate0();
+            return getBitRate0(pointer);
         }
     }
 
-    private native int getSampleRate0();
+    private native int getSampleRate0(long decoderPointer);
 
     /**
      * @return the sample rate of the decoded audio or -1 if the header of the mp3 file is not yet parsed
      */
     public int getSampleRate() {
         synchronized (this) {
-            return getSampleRate0();
+            return getSampleRate0(pointer);
         }
     }
 
@@ -93,20 +104,20 @@ public class Mp3Decoder implements Audio, AutoCloseable {
         return Audio.super.createAudioFormat();
     }
 
-    private native void destroyDecoder0();
+    private native void destroyDecoder0(long decoderPointer);
 
     @Override
     public void close() throws IOException {
         synchronized (this) {
-            destroyDecoder0();
-            decoder = 0L;
+            destroyDecoder0(pointer);
+            pointer = 0L;
             inputStream.close();
         }
     }
 
     public boolean isClosed() {
         synchronized (this) {
-            return decoder == 0L;
+            return pointer == 0L;
         }
     }
 

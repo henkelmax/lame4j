@@ -1,16 +1,15 @@
 # Lame4J
 
-A Java wrapper for [LAME](https://lame.sourceforge.io/index.php) written in Rust using JNI.
+A Java wrapper for [LAME](https://lame.sourceforge.io/index.php) written in C using JNI.
 This also includes [minimp3](https://github.com/lieff/minimp3) to decode mp3 files.
 
 This library includes natives for:
 
-- `Windows x86`
-- `Windows x64`
-- `MacOS x64`
-- `MacOS aarch64`
-- `Linux x86`
-- `Linux x64`
+- `Windows x86_64`
+- `Windows aarch64`
+- `macOS x86_64`
+- `macOS aarch64`
+- `Linux x86_64`
 - `Linux aarch64`
 
 ## Usage
@@ -21,7 +20,7 @@ This library includes natives for:
 <dependency>
   <groupId>de.maxhenkel.lame4j</groupId>
   <artifactId>lame4j</artifactId>
-  <version>2.0.4</version>
+  <version>2.1.0</version>
 </dependency>
 
 <repositories>
@@ -36,7 +35,7 @@ This library includes natives for:
 
 ``` groovy
 dependencies {
-  implementation 'de.maxhenkel.lame4j:lame4j:2.0.4'
+  implementation 'de.maxhenkel.lame4j:lame4j:2.1.0'
 }
 
 repositories {
@@ -72,16 +71,4 @@ encoder.close();
 
 - [LAME](https://lame.sourceforge.io/)
 - [LAME License](https://sourceforge.net/p/lame/svn/HEAD/tree/tags/RELEASE__3_100/lame/COPYING)
-- [mp3lame-sys](https://github.com/DoumanAsh/mp3lame-sys)
-- [minimp3-rs](https://github.com/germangb/minimp3-rs)
 - [minimp3](https://github.com/lieff/minimp3)
-- [jni-rs](https://github.com/jni-rs/jni-rs)
-
-<details>
-  <summary>Other stuff</summary>
-
-- [API](https://sourceforge.net/p/lame/svn/HEAD/tree/tags/RELEASE__3_100/lame/API)
-- [Headers](https://sourceforge.net/p/lame/svn/HEAD/tree/tags/RELEASE__3_100/lame/include/lame.h)
-- [Docs.rs](https://docs.rs/lame-sys/0.1.2/lame_sys/)
-
-</details>
