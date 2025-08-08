@@ -33,6 +33,14 @@ Encoder *get_encoder(JNIEnv *env, const jlong encoder_pointer) {
     return (Encoder *) (uintptr_t) pointer;
 }
 
+bool check_result(JNIEnv *env, const int result, char *message) {
+    if (result < 0) {
+        throw_illegal_argument_exception(env, message);
+        return true;
+    }
+    return false;
+}
+
 JNIEXPORT jlong JNICALL Java_de_maxhenkel_lame4j_Mp3Encoder_createEncoder0(
     JNIEnv *env,
     jclass clazz,
@@ -55,15 +63,28 @@ JNIEXPORT jlong JNICALL Java_de_maxhenkel_lame4j_Mp3Encoder_createEncoder0(
         return 0;
     }
 
-    lame_set_num_channels(lame, channels);
-    lame_set_in_samplerate(lame, sample_rate);
-    lame_set_brate(lame, bit_rate);
-    lame_set_mode(lame, channels == 1 ? MONO : JOINT_STEREO);
-    lame_set_quality(lame, quality);
+    if (check_result(env, lame_set_num_channels(lame, channels), "Invalid number of channels")) {
+        lame_close(lame);
+        return 0;
+    }
+    if (check_result(env, lame_set_in_samplerate(lame, sample_rate), "Invalid sample rate")) {
+        lame_close(lame);
+        return 0;
+    }
+    if (check_result(env, lame_set_brate(lame, bit_rate), "Invalid bit rate")) {
+        lame_close(lame);
+        return 0;
+    }
+    if (check_result(env, lame_set_mode(lame, channels == 1 ? MONO : JOINT_STEREO), "Invalid mode")) {
+        lame_close(lame);
+        return 0;
+    }
+    if (check_result(env, lame_set_quality(lame, quality), "Invalid quality")) {
+        lame_close(lame);
+        return 0;
+    }
 
-    int i = lame_init_params(lame);
-
-    if (i < 0) {
+    if (lame_init_params(lame) < 0) {
         lame_close(lame);
         throw_io_exception(env, "Failed to initialize LAME parameters");
         return 0;
