@@ -3,7 +3,9 @@
 A Java wrapper for [LAME](https://lame.sourceforge.io/index.php) written in C using JNI.
 This also includes [minimp3](https://github.com/lieff/minimp3) to decode mp3 files.
 
-This library includes natives for:
+Java 8+ is required to use this library.
+
+## Supported Platforms
 
 - `Windows x86_64`
 - `Windows aarch64`
@@ -66,6 +68,19 @@ encoder.write(decode);
 encoder.close();
 ```
 
+## Building from Source
+
+### Prerequisites
+
+- [Java](https://www.java.com/en/) 21
+- [Zig](https://ziglang.org/) 0.14.1
+- [Ninja](https://ninja-build.org/)
+
+### Building
+
+``` bash
+./gradlew build
+```
 
 ## Credits
 
