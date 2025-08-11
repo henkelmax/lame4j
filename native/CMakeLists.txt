@@ -78,10 +78,4 @@ target_link_libraries(lame4j PRIVATE
         minimp3
 )
 
-if (UNIX)
-    set_target_properties(lame4j PROPERTIES
-            POSITION_INDEPENDENT_CODE ON
-    )
-endif ()
-
 message(STATUS "C compiler executable: ${CMAKE_C_COMPILER}")
