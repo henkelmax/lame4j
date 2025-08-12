@@ -1,5 +1,8 @@
 package de.maxhenkel.lame4j;
 
+import de.maxhenkel.nativeutils.NativeInitializer;
+import de.maxhenkel.nativeutils.UnknownPlatformException;
+
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -18,7 +21,7 @@ public class Mp3Encoder implements AutoCloseable {
      * @throws UnknownPlatformException if the operating system is not supported
      */
     public Mp3Encoder(int channels, int sampleRate, int bitRate, int quality, OutputStream outputStream) throws IOException, UnknownPlatformException {
-        Lame.load();
+        NativeInitializer.load("liblame4j");
         this.pointer = createEncoder0(channels, sampleRate, bitRate, quality);
         this.outputStream = outputStream;
     }

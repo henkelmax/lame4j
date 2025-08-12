@@ -1,5 +1,8 @@
 package de.maxhenkel.lame4j;
 
+import de.maxhenkel.nativeutils.NativeInitializer;
+import de.maxhenkel.nativeutils.UnknownPlatformException;
+
 import javax.annotation.Nullable;
 import javax.sound.sampled.AudioFormat;
 import java.io.IOException;
@@ -15,7 +18,7 @@ public class Mp3Decoder implements Audio, AutoCloseable {
     private final short[] outBuffer;
 
     public Mp3Decoder(InputStream inputStream) throws IOException, UnknownPlatformException {
-        Lame.load();
+        NativeInitializer.load("liblame4j");
         pointer = createDecoder0();
         this.inputStream = inputStream;
         inBuffer = new byte[16 * 1024];
