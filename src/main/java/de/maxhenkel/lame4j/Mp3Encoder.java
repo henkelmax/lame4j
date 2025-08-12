@@ -21,9 +21,11 @@ public class Mp3Encoder implements AutoCloseable {
      * @throws UnknownPlatformException if the operating system is not supported
      */
     public Mp3Encoder(int channels, int sampleRate, int bitRate, int quality, OutputStream outputStream) throws IOException, UnknownPlatformException {
-        NativeInitializer.load("liblame4j");
-        this.pointer = createEncoder0(channels, sampleRate, bitRate, quality);
-        this.outputStream = outputStream;
+        synchronized (Mp3Encoder.class) {
+            NativeInitializer.load("liblame4j");
+            this.pointer = createEncoder0(channels, sampleRate, bitRate, quality);
+            this.outputStream = outputStream;
+        }
     }
 
     private static native long createEncoder0(int channels, int sampleRate, int bitRate, int quality) throws IOException;

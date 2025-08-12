@@ -18,13 +18,15 @@ public class Mp3Decoder implements Audio, AutoCloseable {
     private final short[] outBuffer;
 
     public Mp3Decoder(InputStream inputStream) throws IOException, UnknownPlatformException {
-        NativeInitializer.load("liblame4j");
-        pointer = createDecoder0();
-        this.inputStream = inputStream;
-        inBuffer = new byte[16 * 1024];
-        leftoverBuffer = new byte[16 * 1024];
-        leftoverBufferLength = 0;
-        outBuffer = new short[getMaxSamplesPerFrame0()];
+        synchronized (Mp3Decoder.class) {
+            NativeInitializer.load("liblame4j");
+            pointer = createDecoder0();
+            this.inputStream = inputStream;
+            inBuffer = new byte[16 * 1024];
+            leftoverBuffer = new byte[16 * 1024];
+            leftoverBufferLength = 0;
+            outBuffer = new short[getMaxSamplesPerFrame0()];
+        }
     }
 
     private static native long createDecoder0();
