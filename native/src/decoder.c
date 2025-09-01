@@ -94,7 +94,7 @@ JNIEXPORT jlong JNICALL Java_de_maxhenkel_lame4j_Mp3Decoder_decodeNextFrame0(
 
     if (frames_used <= 0) {
         free(audio_output);
-        return 0;
+        return (jlong) frame_info.frame_bytes & 0xFFFFFFFFL;
     }
 
     (*env)->SetShortArrayRegion(env, output, 0, frames_used * decoder->channels, audio_output);
