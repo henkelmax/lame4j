@@ -81,12 +81,12 @@ JNIEXPORT jlong JNICALL Java_de_maxhenkel_lame4j_Mp3Decoder_decodeNextFrame0(
 
     mp3d_sample_t *audio_output = calloc(MINIMP3_MAX_SAMPLES_PER_FRAME, sizeof(mp3d_sample_t));
 
-    mp3dec_frame_info_t frame_info;
+    mp3dec_frame_info_t frame_info = {0};
     const int frames_used = mp3dec_decode_frame(decoder->mp3dec, mp3_input, input_length, audio_output, &frame_info);
     (*env)->ReleaseByteArrayElements(env, input, (jbyte *) mp3_input, JNI_ABORT);
 
-    // If the frame bytes are > 0, we can be sure the header has been parsed
-    if (frame_info.frame_bytes > 0) {
+    // If the frame info channels > 0, we can be sure the header has been parsed
+    if (frame_info.channels > 0) {
         decoder->channels = frame_info.channels;
         decoder->sample_rate = frame_info.hz;
         decoder->bit_rate = frame_info.bitrate_kbps;
@@ -94,7 +94,7 @@ JNIEXPORT jlong JNICALL Java_de_maxhenkel_lame4j_Mp3Decoder_decodeNextFrame0(
 
     if (frames_used <= 0) {
         free(audio_output);
-        return (jlong) frame_info.frame_bytes & 0xFFFFFFFFL;
+        return (jlong) frame_info.frame_bytes & 0xFFFFFFFFLL;
     }
 
     (*env)->SetShortArrayRegion(env, output, 0, frames_used * decoder->channels, audio_output);
@@ -103,7 +103,7 @@ JNIEXPORT jlong JNICALL Java_de_maxhenkel_lame4j_Mp3Decoder_decodeNextFrame0(
     const int32_t frames = frames_used * decoder->channels;
     const int32_t bytes = frame_info.frame_bytes;
 
-    return (jlong) (jint) frames << 32 | (jlong) bytes & 0xFFFFFFFFL;
+    return (jlong) (jint) frames << 32 | (jlong) bytes & 0xFFFFFFFFLL;
 }
 
 JNIEXPORT jint JNICALL Java_de_maxhenkel_lame4j_Mp3Decoder_getChannelCount0(
