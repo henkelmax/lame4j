@@ -27,7 +27,7 @@ if (DEFINED CPU_ARCHITECTURE_TARGET)
     string(APPEND BASE_COMPILER_FLAGS " -march=${CPU_ARCHITECTURE_TARGET}")
 endif ()
 
-string(APPEND BASE_COMPILER_FLAGS " -Oz")
+string(APPEND BASE_COMPILER_FLAGS " -O3")
 string(APPEND BASE_COMPILER_FLAGS " -ffunction-sections")
 string(APPEND BASE_COMPILER_FLAGS " -fdata-sections")
 string(APPEND BASE_COMPILER_FLAGS " -fno-unwind-tables")
