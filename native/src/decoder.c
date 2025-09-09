@@ -2,11 +2,13 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <minimp3.h>
+#include <string.h>
 
 #include "exceptions.h"
 
 typedef struct Decoder {
     mp3dec_t *mp3dec;
+    mp3d_sample_t *audio_output;
     jint channels;
     jint sample_rate;
     jint bit_rate;
@@ -33,9 +35,11 @@ JNIEXPORT jlong JNICALL Java_de_maxhenkel_lame4j_Mp3Decoder_createDecoder0(
     jclass clazz
 ) {
     mp3dec_t *mp3dec = malloc(sizeof(mp3dec_t));
+    memset(mp3dec, 0, sizeof(mp3dec_t));
     mp3dec_init(mp3dec);
     Decoder *decoder = malloc(sizeof(Decoder));
     decoder->mp3dec = mp3dec;
+    decoder->audio_output = calloc(MINIMP3_MAX_SAMPLES_PER_FRAME, sizeof(mp3d_sample_t));
     decoder->channels = -1;
     decoder->sample_rate = -1;
     decoder->bit_rate = -1;
@@ -79,10 +83,9 @@ JNIEXPORT jlong JNICALL Java_de_maxhenkel_lame4j_Mp3Decoder_decodeNextFrame0(
 
     const uint8_t *mp3_input = (uint8_t *) (*env)->GetByteArrayElements(env, input, false);
 
-    mp3d_sample_t *audio_output = calloc(MINIMP3_MAX_SAMPLES_PER_FRAME, sizeof(mp3d_sample_t));
-
     mp3dec_frame_info_t frame_info = {0};
-    const int frames_used = mp3dec_decode_frame(decoder->mp3dec, mp3_input, input_length, audio_output, &frame_info);
+    const int frames_used = mp3dec_decode_frame(decoder->mp3dec, mp3_input, input_length, decoder->audio_output,
+                                                &frame_info);
     (*env)->ReleaseByteArrayElements(env, input, (jbyte *) mp3_input, JNI_ABORT);
 
     // If the frame info channels > 0, we can be sure the header has been parsed
@@ -93,12 +96,10 @@ JNIEXPORT jlong JNICALL Java_de_maxhenkel_lame4j_Mp3Decoder_decodeNextFrame0(
     }
 
     if (frames_used <= 0) {
-        free(audio_output);
         return (jlong) frame_info.frame_bytes & 0xFFFFFFFFLL;
     }
 
-    (*env)->SetShortArrayRegion(env, output, 0, frames_used * decoder->channels, audio_output);
-    free(audio_output);
+    (*env)->SetShortArrayRegion(env, output, 0, frames_used * decoder->channels, decoder->audio_output);
 
     const int32_t frames = frames_used * decoder->channels;
     const int32_t bytes = frame_info.frame_bytes;
@@ -152,5 +153,6 @@ JNIEXPORT void JNICALL Java_de_maxhenkel_lame4j_Mp3Decoder_destroyDecoder0(
     }
     Decoder *decoder = (Decoder *) (uintptr_t) decoder_pointer;
     free(decoder->mp3dec);
+    free(decoder->audio_output);
     free(decoder);
 }
